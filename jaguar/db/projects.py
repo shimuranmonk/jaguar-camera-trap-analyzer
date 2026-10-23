@@ -18,6 +18,10 @@ MIGRATIONS = ((1, (
     "CREATE TABLE import_runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), roots_json TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('running','paused','completed','failed')), started_at TEXT NOT NULL, ended_at TEXT, discovery_complete INTEGER NOT NULL DEFAULT 0, scan_errors INTEGER NOT NULL DEFAULT 0, last_error TEXT)",
     "CREATE TABLE import_items (run_id TEXT NOT NULL REFERENCES import_runs(id), absolute_path TEXT NOT NULL, source_root_id TEXT NOT NULL REFERENCES source_roots(id), relative_path TEXT NOT NULL, file_size INTEGER, mtime_ns INTEGER, status TEXT NOT NULL CHECK(status IN ('pending','running','succeeded','failed')), attempt INTEGER NOT NULL DEFAULT 0, image_id TEXT REFERENCES images(id), error TEXT, seen INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(run_id,absolute_path))",
     "CREATE INDEX import_items_queue ON import_items(run_id,status)",
+)), (3, (
+    "CREATE TABLE exif_runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), status TEXT NOT NULL, tool_version TEXT NOT NULL, normalizer_version TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT)",
+    "CREATE TABLE exif_records (id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES exif_runs(id), image_id TEXT NOT NULL REFERENCES images(id), source_path TEXT NOT NULL, status TEXT NOT NULL, raw_json TEXT, normalized_json TEXT, stderr TEXT, error TEXT, extracted_at TEXT NOT NULL, UNIQUE(run_id,image_id))",
+    "CREATE INDEX exif_records_image ON exif_records(image_id,extracted_at)",
 )),)
 
 

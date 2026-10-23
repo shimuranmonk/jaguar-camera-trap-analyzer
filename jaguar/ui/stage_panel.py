@@ -31,6 +31,10 @@ class StagePanel(ExifPanel):
         self.scope=ids
         self.start.setText('Start / resume '+self.stage+(' · selected image' if ids is not None else ' · all images'))
 
+    def set_project(self,path):
+        self.set_scope(None)
+        super().set_project(path)
+
     def choose_tool(self):
         path = QFileDialog.getExistingDirectory(self, "OCR model folder" if self.stage == "ocr" else "MegaDetector model folder containing checkpoints")
         if path:

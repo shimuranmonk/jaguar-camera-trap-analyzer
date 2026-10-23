@@ -12,7 +12,8 @@ The application uses Python, PySide6, and SQLite. The current build includes res
 - EXIF extraction with retained raw metadata, source references, and explicit missing values.
 - Versioned OCR profiles, generic fallback, retained text/confidence/regions, and separate Fahrenheit/Celsius observations.
 - Animal/person/vehicle boxes, metadata conflict review, reversible corrections, and separate camera/deployment assignments.
-- Planned MVP stages: multi-sheet Excel export and installer packaging.
+- Multi-sheet Excel export with documented row grains, provenance, review history, numeric fields, and formula-injection protection.
+- Installer packaging and larger field-data acceptance remain in progress.
 - Offline Windows operation with processing history, recovery checkpoints, and later installer packaging.
 
 ## Possible future additions

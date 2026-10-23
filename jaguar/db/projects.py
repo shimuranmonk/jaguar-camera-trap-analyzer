@@ -41,6 +41,8 @@ MIGRATIONS = ((1, (
     "CREATE TABLE cameras (id TEXT PRIMARY KEY, make TEXT, model TEXT, serial TEXT, label TEXT NOT NULL, created_at TEXT NOT NULL)",
     "CREATE TABLE deployments (id TEXT PRIMARY KEY, camera_id TEXT REFERENCES cameras(id), site_label TEXT NOT NULL, start_at TEXT, end_at TEXT, notes TEXT)",
     "CREATE TABLE image_assignments (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), camera_id TEXT REFERENCES cameras(id), deployment_id TEXT REFERENCES deployments(id), actor TEXT NOT NULL, assigned_at TEXT NOT NULL)",
+)), (7, (
+    "CREATE TABLE exports (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), path TEXT NOT NULL, created_at TEXT NOT NULL, config_json TEXT NOT NULL, counts_json TEXT NOT NULL, sha256 TEXT NOT NULL, app_version TEXT NOT NULL)",
 )),)
 
 

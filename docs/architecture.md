@@ -1,4 +1,4 @@
-# Gate 1 architecture
+# Application architecture
 
 JAGUAR uses Python and PySide6 for the Windows desktop interface and SQLite for authoritative local project storage. The approved MVP covers extraction, validation, review, and Excel reporting. Species classification and ecological analysis remain outside scope.
 
@@ -7,6 +7,12 @@ The application package separates `ui`, `core`, `db`, `ingest`, `adapters`, `ocr
 Migration 1 stores one project per database and its source roots. Foreign keys are enabled on every application connection. Each migration batch runs in a transaction; failure rolls back its DDL and version records. Unknown migration versions are rejected. Exclusive file creation prevents overwrite; opening a missing path does not create a database. A JAGUAR application identifier protects unrelated databases. Backup before future upgrades remains the recovery policy; no destructive downgrade is provided.
 
 Gate 1 has no concurrent workers, so SQLite uses its default journal. A controlled writer and WAL evaluation belong to worker integration. Processing tables will arrive with the stages that use them rather than freezing the handover's proposed schema prematurely.
+
+Gate 2 adds images, image_paths, import_runs, and import_items in migration 2. A single spawned import process holds an OS file lock for its project. SQLite transactions commit each file's identity, path, and successful checkpoint together. The GUI receives bounded progress messages and reads summary results; concurrent imports for one database are rejected. SQLite's default journal remains sufficient for this single-writer import stage.
+
+Discovery streams through nested folders, without following symbolic links or directory junctions. JPEG/PNG content is decoded before acceptance, and hashing uses one-megabyte blocks. SHA-256 identity is unique per project; every matching source path remains stored. Changed content at an existing path creates a new identity while preserving the old path record as unavailable. Missing paths are marked unavailable only after a clean scan.
+
+Interrupted imports resume the latest running or paused run with exactly the same selected folders. Committed files are reused when size and modification time match; changed files are hashed again. A new completed-run import always hashes its inputs again. Changes that deliberately preserve both size and timestamp during a pause cannot be detected by the checkpoint shortcut; a fresh run provides full revalidation. Scan errors and file failures remain visible and durable. Counts describe paths and distinct images within the selected run, including duplicate paths beyond the first matching hash in that run.
 
 The desktop shell preserves a left sidebar and project context. The later dashboard will add project/camera/date/run filters, compact KPI tiles, chart cards, review/progress panels, and Excel export. Every metric must derive from stored data. The approved screenshot remains outstanding; the shell makes no claim of final visual fidelity.
 

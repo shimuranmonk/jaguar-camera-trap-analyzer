@@ -6,6 +6,9 @@ from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel,
 
 from jaguar.db.projects import create_project, open_project
 from jaguar.ui.import_panel import ImportPanel
+from jaguar.ui.exif_panel import ExifPanel
+from jaguar.ui.dashboard import Dashboard
+from jaguar.ui.theme import STYLE
 
 
 class MainWindow(QMainWindow):
@@ -13,9 +16,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("JAGUAR Camera Trap Data Analyzer")
         self.resize(1200, 720)
+        self.setStyleSheet(STYLE)
         self.project = None
         self.project_path = None
         self.import_panel = ImportPanel()
+        self.exif_panel = ExifPanel()
+        self.dashboard = Dashboard()
         container = QWidget()
         layout = QHBoxLayout(container)
         self.sidebar = QListWidget()
@@ -33,6 +39,12 @@ class MainWindow(QMainWindow):
         content.addLayout(actions)
         self.pages = QStackedWidget()
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
+            if title == "Dashboard":
+                self.pages.addWidget(self.dashboard)
+                continue
+            if title == "Processing":
+                self.pages.addWidget(self.exif_panel)
+                continue
             if title == "Projects / Import":
                 self.pages.addWidget(self.import_panel)
                 continue
@@ -49,21 +61,25 @@ class MainWindow(QMainWindow):
         layout.addLayout(content, 1)
         self.setCentralWidget(container)
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
+        self.sidebar.currentRowChanged.connect(lambda index: self.dashboard.refresh() if index == 0 else None)
         self.sidebar.setCurrentRow(0)
-        self.statusBar().showMessage("Gate 2 | Resumable image import")
+        self.statusBar().showMessage("Gate 3 | EXIF metadata extraction")
 
     def load_project(self, path: Path):
-        if self.import_panel.active():
+        if self.import_panel.active() or self.exif_panel.active():
             raise ValueError("The current import must pause before another project opens.")
         project = open_project(path)
         self.project = project
         self.project_path = path
         self.import_panel.set_project(path)
+        self.exif_panel.set_project(path)
+        self.dashboard.database = path
+        self.dashboard.refresh()
         self.project_label.setText(f"Project: {project.name}")
         self.statusBar().showMessage("Project opened")
 
     def create(self):
-        if self.import_panel.active():
+        if self.import_panel.active() or self.exif_panel.active():
             QMessageBox.information(self, "Import active", "The current import must pause before another project opens.")
             return
         name, accepted = QInputDialog.getText(self, "Create project", "Project name")
@@ -78,7 +94,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Project could not be created", str(error))
 
     def open(self):
-        if self.import_panel.active():
+        if self.import_panel.active() or self.exif_panel.active():
             QMessageBox.information(self, "Import active", "The current import must pause before another project opens.")
             return
         path, _ = QFileDialog.getOpenFileName(self, "Open project", "", "JAGUAR project (*.sqlite)")
@@ -89,8 +105,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Project could not be opened", str(error))
 
     def closeEvent(self, event):
-        if self.import_panel.active():
+        if self.import_panel.active() or self.exif_panel.active():
             self.import_panel.request_pause()
+            self.exif_panel.request_pause()
             self.statusBar().showMessage("Import is pausing. The window can close after the checkpoint completes.")
             event.ignore()
         else:

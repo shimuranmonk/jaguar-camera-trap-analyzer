@@ -19,6 +19,7 @@ class ImportPanel(QWidget):
         self.process = None
         self.messages = None
         self.stop = None
+        self.worker_error = None
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Source folders"))
         self.roots = QListWidget()
@@ -64,7 +65,7 @@ class ImportPanel(QWidget):
             for root in roots:
                 self.roots.addItem(root)
         self.enable_inputs(True)
-        value = latest_summary(path)
+        value = self.current_summary()
         if value:
             self.display(value)
             self.show_errors()
@@ -87,6 +88,7 @@ class ImportPanel(QWidget):
             self.report.setText("At least one source folder is required.")
             return
         context = multiprocessing.get_context("spawn")
+        self.worker_error = None
         self.messages = context.Queue(maxsize=32)
         self.stop = context.Event()
         self.process = context.Process(target=run_import, args=(str(self.database), roots, self.stop, self.messages))
@@ -120,6 +122,9 @@ class ImportPanel(QWidget):
         for path, message in latest_errors(self.database):
             self.errors.addItem(f"{path}: {message}")
 
+    def current_summary(self):
+        return latest_summary(self.database)
+
     def poll(self):
         for _ in range(32):
             try:
@@ -127,6 +132,7 @@ class ImportPanel(QWidget):
             except queue.Empty:
                 break
             if "error" in message:
+                self.worker_error = message["error"]
                 self.report.setText(message["error"])
             else:
                 self.display(message.get("final", message))
@@ -139,9 +145,11 @@ class ImportPanel(QWidget):
             self.messages.close()
             self.enable_inputs(True)
             self.pause.setEnabled(False)
-            value = latest_summary(self.database)
+            value = self.current_summary()
             if value:
                 self.display(value)
                 self.show_errors()
                 if value["status"] == "running" or exitcode:
                     self.report.setText(self.report.text() + "\nWorker interrupted. The import can resume from committed checkpoints.")
+            if self.worker_error:
+                self.report.setText(self.report.text() + "\n" + self.worker_error)

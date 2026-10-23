@@ -58,7 +58,7 @@ class ProjectTests(unittest.TestCase):
     def test_failed_migration_rolls_back(self):
         create_project(self.path, "Survey")
         with closing(sqlite3.connect(self.path)) as connection:
-            with patch("jaguar.db.projects.MIGRATIONS", MIGRATIONS + ((3, ("CREATE TABLE temporary_table (id TEXT)", "INVALID SQL")),)):
+            with patch("jaguar.db.projects.MIGRATIONS", MIGRATIONS + ((len(MIGRATIONS)+1, ("CREATE TABLE temporary_table (id TEXT)", "INVALID SQL")),)):
                 with self.assertRaises(sqlite3.Error):
                     migrate(connection)
             self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='temporary_table'").fetchone())

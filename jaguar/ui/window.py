@@ -23,6 +23,7 @@ class MainWindow(QMainWindow):
         self.import_panel = ImportPanel()
         self.exif_panel = ExifPanel()
         self.ocr_panel = StagePanel("ocr")
+        self.detection_panel = StagePanel("detect")
         self.dashboard = Dashboard()
         container = QWidget()
         layout = QHBoxLayout(container)
@@ -48,6 +49,7 @@ class MainWindow(QMainWindow):
                 processing = QTabWidget()
                 processing.addTab(self.exif_panel, "EXIF")
                 processing.addTab(self.ocr_panel, "Overlay OCR")
+                processing.addTab(self.detection_panel, "Detection")
                 self.pages.addWidget(processing)
                 continue
             if title == "Projects / Import":
@@ -79,6 +81,7 @@ class MainWindow(QMainWindow):
         self.import_panel.set_project(path)
         self.exif_panel.set_project(path)
         self.ocr_panel.set_project(path)
+        self.detection_panel.set_project(path)
         self.dashboard.database = path
         self.dashboard.refresh()
         self.project_label.setText(f"Project: {project.name}")
@@ -115,10 +118,11 @@ class MainWindow(QMainWindow):
             self.import_panel.request_pause()
             self.exif_panel.request_pause()
             self.ocr_panel.request_pause()
+            self.detection_panel.request_pause()
             self.statusBar().showMessage("Import is pausing. The window can close after the checkpoint completes.")
             event.ignore()
         else:
             event.accept()
 
     def processing_active(self):
-        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel])
+        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel])

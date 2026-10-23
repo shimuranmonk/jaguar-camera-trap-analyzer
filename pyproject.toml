@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jaguar-camera-trap-analyzer"
-version = "0.4.0"
+version = "0.5.0"
 description = "JAGUAR camera trap data analyzer"
 requires-python = ">=3.13,<3.14"
 dependencies = ["PySide6==6.10.0"]
 
 [project.optional-dependencies]
 ocr = ["paddlepaddle==3.2.2", "paddleocr==3.3.2", "opencv-contrib-python==4.10.0.84", "numpy==2.2.6"]
+detection = ["PytorchWildlife==1.3.0", "torch==2.9.0", "torchvision==0.24.0", "torchaudio==2.9.0", "soundfile==0.13.1", "librosa==0.11.0", "sahi==0.11.23", "opencv-python==4.10.0.84", "opencv-python-headless==4.10.0.84"]
 
 [project.scripts]
 jaguar = "jaguar.app:main"

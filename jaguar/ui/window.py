@@ -11,6 +11,10 @@ from jaguar.ui.dashboard import Dashboard
 from jaguar.ui.theme import STYLE
 from jaguar.ui.stage_panel import StagePanel
 from jaguar.ui.review_panel import ReviewPanel
+from jaguar.ui.images_panel import ImagesPanel
+from jaguar.ui.cameras_panel import CamerasPanel
+from jaguar.ui.settings_panel import SettingsPanel
+from jaguar.core.settings import read_settings
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +31,11 @@ class MainWindow(QMainWindow):
         self.detection_panel = StagePanel("detect")
         self.reconcile_panel = StagePanel("reconcile")
         self.review_panel = ReviewPanel()
+        self.images_panel = ImagesPanel()
+        self.detections_page = ImagesPanel(True)
+        self.cameras_panel = CamerasPanel(self.images_panel,self.ocr_panel)
+        self.settings_panel = SettingsPanel()
+        self.settings_panel.saved.connect(self.apply_settings)
         self.dashboard = Dashboard()
         container = QWidget()
         layout = QHBoxLayout(container)
@@ -45,6 +54,10 @@ class MainWindow(QMainWindow):
         content.addLayout(actions)
         self.pages = QStackedWidget()
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
+            page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel}
+            if title in page_map:
+                self.pages.addWidget(page_map[title])
+                continue
             if title == "Review Queue":
                 self.pages.addWidget(self.review_panel)
                 continue
@@ -75,9 +88,9 @@ class MainWindow(QMainWindow):
         layout.addLayout(content, 1)
         self.setCentralWidget(container)
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
-        self.sidebar.currentRowChanged.connect(lambda index: self.dashboard.refresh() if index == 0 else None)
+        self.sidebar.currentRowChanged.connect(self.refresh_page)
         self.sidebar.setCurrentRow(0)
-        self.statusBar().showMessage("Gate 3 | EXIF metadata extraction")
+        self.statusBar().showMessage("Local processing workspace")
 
     def load_project(self, path: Path):
         if self.processing_active():
@@ -91,8 +104,10 @@ class MainWindow(QMainWindow):
         self.detection_panel.set_project(path)
         self.reconcile_panel.set_project(path)
         self.review_panel.set_project(path)
-        self.dashboard.database = path
-        self.dashboard.refresh()
+        for panel in [self.images_panel,self.detections_page,self.cameras_panel,self.settings_panel]:
+            panel.set_project(path)
+        self.apply_settings()
+        self.dashboard.set_project(path)
         self.project_label.setText(f"Project: {project.name}")
         self.statusBar().showMessage("Project opened")
 
@@ -136,3 +151,15 @@ class MainWindow(QMainWindow):
 
     def processing_active(self):
         return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel])
+
+    def apply_settings(self):
+        if self.project_path:
+            settings=read_settings(self.project_path)
+            for panel,key in [(self.exif_panel,'exiftool_path'),(self.ocr_panel,'ocr_models'),(self.detection_panel,'detector_models')]:
+                if not panel.active():
+                    panel.executable.setText(settings[key])
+
+    def refresh_page(self,index):
+        panels={0:self.dashboard,3:self.images_panel,4:self.cameras_panel,5:self.detections_page,6:self.review_panel}
+        if index in panels:
+            panels[index].refresh()

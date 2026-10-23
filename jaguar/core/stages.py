@@ -43,6 +43,9 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
         with closing(sqlite3.connect(database, timeout=10)) as connection:
             connection.execute("PRAGMA foreign_keys=ON")
             config = dict(config, engine_version=engine.version)
+            if stage == "reconcile":
+                config["input_revisions"] = [connection.execute("SELECT coalesce(max(rowid),0) FROM " + table).fetchone()[0] for table in ["exif_records", "audit_events"]]
+                config["input_revisions"].append(connection.execute("SELECT coalesce(max(r.rowid),0) FROM processing_records r JOIN processing_runs p ON p.id=r.run_id WHERE p.stage IN ('ocr','detect')").fetchone()[0])
             if stage == "ocr":
                 config["profiles"] = [p.snapshot() for p in PROFILES.values()]
                 config["assignments"] = connection.execute("SELECT image_id,profile_id,profile_version FROM profile_assignments ORDER BY rowid").fetchall()
@@ -73,16 +76,19 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
                 image_id, expected = image
                 payload, error, path = None, None, None
                 try:
-                    for (candidate,) in connection.execute("SELECT absolute_path FROM image_paths WHERE image_id=? AND is_available=1", (image_id,)):
-                        candidate = Path(candidate)
-                        if candidate.is_file() and fingerprint(candidate, stopped) == expected:
-                            path = candidate
-                            break
-                    if path is None:
-                        raise ValueError("Source is unavailable or changed; a new import is required.")
-                    payload = ocr_payload(connection, image_id, path, engine) if stage == "ocr" else engine.extract(path)
-                    if fingerprint(path, stopped) != expected:
-                        raise ValueError("Source changed during processing; output rejected.")
+                    if getattr(engine, "no_source", False):
+                        payload = engine.extract_for_image(connection, image_id)
+                    else:
+                        for (candidate,) in connection.execute("SELECT absolute_path FROM image_paths WHERE image_id=? AND is_available=1", (image_id,)):
+                            candidate = Path(candidate)
+                            if candidate.is_file() and fingerprint(candidate, stopped) == expected:
+                                path = candidate
+                                break
+                        if path is None:
+                            raise ValueError("Source is unavailable or changed; a new import is required.")
+                        payload = ocr_payload(connection, image_id, path, engine) if stage == "ocr" else engine.extract(path)
+                        if fingerprint(path, stopped) != expected:
+                            raise ValueError("Source changed during processing; output rejected.")
                 except InterruptedError:
                     report["status"] = "paused"
                     break
@@ -90,6 +96,8 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
                     error = str(failure)[:2000]
                 status = "failed" if error else "succeeded"
                 with connection:
+                    if hasattr(engine, "save") and not error:
+                        engine.save(connection, image_id, payload)
                     record_id = str(uuid4())
                     connection.execute("INSERT INTO processing_records VALUES (?,?,?,?,?,?,?)", (record_id, run_id, image_id, status, json.dumps(payload, ensure_ascii=False) if payload else None, error, now()))
                     if stage == "detect" and not error:

@@ -46,13 +46,22 @@ def run_processing(database, stage, model_root, stop, messages):
             pass
     try:
         from jaguar.core.stages import run_stage
+        import json, sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(database)) as connection:
+            settings = json.loads(connection.execute("SELECT settings_json FROM projects").fetchone()[0])
         if stage == "ocr":
             from jaguar.adapters.paddle_ocr import PaddleEngine
             engine = PaddleEngine(model_root)
-        else:
+        elif stage == "detect":
             from jaguar.adapters.megadetector import Detector
-            engine = Detector(model_root)
-        result = run_stage(database, stage, {"model_root": model_root}, engine, stop.is_set, publish)
+            engine = Detector(model_root, threshold=settings.get("detection_threshold", .2))
+        elif stage == "reconcile":
+            from jaguar.core.reconciliation import Reconciler
+            engine = Reconciler(settings.get("timestamp_tolerance_seconds", 0), settings.get("temperature_tolerance_c", 1))
+        else:
+            raise ValueError("Unsupported processing stage.")
+        result = run_stage(database, stage, {"model_root": model_root, "settings": settings}, engine, stop.is_set, publish)
         messages.put({"final": result}, timeout=2)
     except Exception as error:
         try:

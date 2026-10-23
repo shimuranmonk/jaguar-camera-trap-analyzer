@@ -63,7 +63,14 @@ def analysis_rows(connection):
 
 
 def write_analysis(connection, sheets):
-    columns = set()
+    columns = set(('image_id filename exif_status exif_record_id exif_run_id '
+        'exif_capture_timestamp exif_timezone_known exif_make exif_model exif_physical_camera_id '
+        'exif_temperature_c exif_latitude exif_longitude exif_width exif_height exif_orientation '
+        'ocr_status ocr_record_id ocr_run_id ocr_capture_timestamp ocr_date ocr_time '
+        'ocr_camera_site_label ocr_brand ocr_timezone_known ocr_temperature_f ocr_temperature_c '
+        'ocr_temperature_f_candidate_count ocr_temperature_c_candidate_count ocr_text '
+        'ocr_min_confidence ocr_profile_id ocr_profile_version ocr_review_required ocr_warnings '
+        'has_metadata_conflict open_review_cases').split())
     for row in analysis_rows(connection):
         columns.update(row)
     headers = ['image_id', 'filename'] + sorted(columns - {'image_id', 'filename'})

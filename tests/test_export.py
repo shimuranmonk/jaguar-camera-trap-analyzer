@@ -38,6 +38,7 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(result['images'],0)
         book=load_workbook(self.output)
         self.assertEqual(book['Images'].max_row,1)
+        self.assertIn('ocr_temperature_f',[c.value for c in book['Analysis Data'][1]])
         book.close()
         before=self.output.read_bytes()
         with self.assertRaises(FileExistsError):

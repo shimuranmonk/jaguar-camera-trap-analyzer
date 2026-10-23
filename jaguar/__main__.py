@@ -1,3 +1,6 @@
 from jaguar.app import main
+from multiprocessing import freeze_support
 
-raise SystemExit(main())
+if __name__ == "__main__":
+    freeze_support()
+    raise SystemExit(main())

@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from jaguar.db.projects import create_project, open_project, migrate
+from jaguar.db.projects import MIGRATIONS
 
 
 class ProjectTests(unittest.TestCase):
@@ -50,18 +51,18 @@ class ProjectTests(unittest.TestCase):
         with closing(sqlite3.connect(self.path)) as connection:
             migrate(connection)
             migrate(connection)
-            self.assertEqual(connection.execute("SELECT count(*) FROM schema_migrations").fetchone()[0], 1)
+            self.assertEqual(connection.execute("SELECT count(*) FROM schema_migrations").fetchone()[0], len(MIGRATIONS))
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute("INSERT INTO source_roots VALUES ('root', 'missing', 'folder', 'today')")
 
     def test_failed_migration_rolls_back(self):
         create_project(self.path, "Survey")
         with closing(sqlite3.connect(self.path)) as connection:
-            with patch("jaguar.db.projects.MIGRATIONS", ((1, ()), (2, ("CREATE TABLE temporary_table (id TEXT)", "INVALID SQL")))):
+            with patch("jaguar.db.projects.MIGRATIONS", MIGRATIONS + ((3, ("CREATE TABLE temporary_table (id TEXT)", "INVALID SQL")),)):
                 with self.assertRaises(sqlite3.Error):
                     migrate(connection)
             self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='temporary_table'").fetchone())
-            self.assertEqual(connection.execute("SELECT count(*) FROM schema_migrations").fetchone()[0], 1)
+            self.assertEqual(connection.execute("SELECT count(*) FROM schema_migrations").fetchone()[0], len(MIGRATIONS))
 
     def test_newer_schema_is_rejected(self):
         create_project(self.path, "Survey")

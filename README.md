@@ -1,10 +1,10 @@
-# JAGUAR
+# The JAGUAR
 
 **Jeruel Aguhob’s Gateway for Unified Analysis and Reporting**
 
 JAGUAR is a Windows desktop application for turning mixed-brand camera-trap photographs into reliable, analysis-ready Excel data. Frozen MVP 1 covers metadata extraction, overlay OCR, animal/person/vehicle detection, human review, and traceable exports while preserving original images.
 
-The application uses Python, PySide6, and SQLite. Gate 1 provides the desktop shell and local project storage; image processing and export follow in later approved gates.
+The application uses Python, PySide6, and SQLite. The current build provides local projects, resumable folder imports, and duplicate detection. Metadata extraction, detection, review, and Excel export follow in later approved gates.
 
 ## Development
 

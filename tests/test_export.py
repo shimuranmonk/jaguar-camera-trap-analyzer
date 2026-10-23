@@ -44,6 +44,27 @@ class ExportTests(unittest.TestCase):
             export_workbook(self.db,self.output)
         self.assertEqual(self.output.read_bytes(),before)
 
+    def test_analysis_preserves_source_values_and_long_tags_in_columns(self):
+        import sqlite3
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute('UPDATE exif_records SET raw_json=?', (json.dumps({'ExifIFD:ISO':100,'Unknown:LongTag':'x'*70000,'IFD0:Software':'=unsafe'}),))
+            connection.commit()
+        export_workbook(self.db,self.output)
+        book=load_workbook(self.output)
+        self.addCleanup(book.close)
+        sheet=book['Analysis Data']
+        self.assertEqual(sheet.max_row,2)
+        row=dict(zip((c.value for c in sheet[1]),sheet[2]))
+        self.assertEqual(row['image_id'].value,self.image_id)
+        self.assertEqual(row['exif_raw.ExifIFD:ISO'].value,100)
+        self.assertEqual(row['exif_raw.ExifIFD:ISO'].data_type,'n')
+        self.assertTrue(row['exif_raw.IFD0:Software'].value.startswith("'="))
+        self.assertEqual(''.join(row[key].value for key in ['exif_raw.Unknown:LongTag','exif_raw.Unknown:LongTag__part_2','exif_raw.Unknown:LongTag__part_3']),'x'*70000)
+        self.assertEqual(row['ocr_temperature_c'].data_type,'n')
+        self.assertEqual(row['ocr_status'].value,'succeeded')
+        self.assertIn('exif_capture_timestamp',row)
+        self.assertIn('ocr_capture_timestamp',row)
+
     def test_long_raw_metadata_is_losslessly_chunked(self):
         import sqlite3
         raw=json.dumps([{'Unknown:LongTag':'x'*70000}])

@@ -14,14 +14,14 @@ class StagePanel(ExifPanel):
         super().__init__()
         self.layout().itemAt(0).widget().setText("Overlay OCR" if stage == "ocr" else "Animal / person / vehicle detection")
         self.executable.clear()
-        self.executable.setPlaceholderText("Local OCR model folder containing det and rec" if stage == "ocr" else "Local MegaDetector model file")
+        self.executable.setPlaceholderText("Local OCR model folder containing det and rec" if stage == "ocr" else "Local MegaDetector model folder containing checkpoints")
         self.layout().itemAt(2).widget().setText("Locate local models")
         self.start.setText("Start / resume " + stage)
         self.pause.setText("Pause " + stage)
         self.layout().itemAt(self.layout().count()-1).widget().setText("Local inference preserves original images and processing provenance.")
 
     def choose_tool(self):
-        path = QFileDialog.getExistingDirectory(self, "OCR model folder") if self.stage == "ocr" else QFileDialog.getOpenFileName(self, "MegaDetector model", "", "Model (*.pt)")[0]
+        path = QFileDialog.getExistingDirectory(self, "OCR model folder" if self.stage == "ocr" else "MegaDetector model folder containing checkpoints")
         if path:
             self.executable.setText(path)
 

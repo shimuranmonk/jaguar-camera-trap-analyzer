@@ -90,7 +90,11 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
                     error = str(failure)[:2000]
                 status = "failed" if error else "succeeded"
                 with connection:
-                    connection.execute("INSERT INTO processing_records VALUES (?,?,?,?,?,?,?)", (str(uuid4()), run_id, image_id, status, json.dumps(payload, ensure_ascii=False) if payload else None, error, now()))
+                    record_id = str(uuid4())
+                    connection.execute("INSERT INTO processing_records VALUES (?,?,?,?,?,?,?)", (record_id, run_id, image_id, status, json.dumps(payload, ensure_ascii=False) if payload else None, error, now()))
+                    if stage == "detect" and not error:
+                        for detection in payload["detections"]:
+                            connection.execute("INSERT INTO detections VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", (str(uuid4()), record_id, image_id, run_id, detection["class"], detection["confidence"], *detection["box"], payload["model_version"], payload["threshold"]))
                 report[status] += 1
                 progress(dict(report))
             with connection:

@@ -28,6 +28,9 @@ MIGRATIONS = ((1, (
     "CREATE TABLE processing_records (id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES processing_runs(id), image_id TEXT NOT NULL REFERENCES images(id), status TEXT NOT NULL, payload_json TEXT, error TEXT, processed_at TEXT NOT NULL, UNIQUE(run_id,image_id))",
     "CREATE INDEX processing_runs_stage ON processing_runs(stage,config_hash,status)",
     "CREATE INDEX processing_records_image ON processing_records(image_id,run_id)",
+)), (5, (
+    "CREATE TABLE detections (id TEXT PRIMARY KEY, record_id TEXT NOT NULL REFERENCES processing_records(id), image_id TEXT NOT NULL REFERENCES images(id), run_id TEXT NOT NULL REFERENCES processing_runs(id), class TEXT NOT NULL CHECK(class IN ('animal','person','vehicle')), confidence REAL NOT NULL CHECK(confidence>=0 AND confidence<=1), x REAL NOT NULL, y REAL NOT NULL, width REAL NOT NULL, height REAL NOT NULL, model_version TEXT NOT NULL, threshold REAL NOT NULL)",
+    "CREATE INDEX detections_image_class ON detections(image_id,class)",
 )),)
 
 

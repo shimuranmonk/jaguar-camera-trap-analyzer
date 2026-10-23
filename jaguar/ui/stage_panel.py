@@ -12,10 +12,13 @@ class StagePanel(ExifPanel):
     def __init__(self, stage):
         self.stage = stage
         super().__init__()
-        self.layout().itemAt(0).widget().setText("Overlay OCR" if stage == "ocr" else "Animal / person / vehicle detection")
+        self.layout().itemAt(0).widget().setText({"ocr": "Overlay OCR", "detect": "Animal / person / vehicle detection", "reconcile": "Metadata reconciliation and review rules"}[stage])
         self.executable.clear()
         self.executable.setPlaceholderText("Local OCR model folder containing det and rec" if stage == "ocr" else "Local MegaDetector model folder containing checkpoints")
         self.layout().itemAt(2).widget().setText("Locate local models")
+        if stage == "reconcile":
+            self.executable.hide()
+            self.layout().itemAt(2).widget().hide()
         self.start.setText("Start / resume " + stage)
         self.pause.setText("Pause " + stage)
         self.layout().itemAt(self.layout().count()-1).widget().setText("Local inference preserves original images and processing provenance.")
@@ -45,7 +48,7 @@ class StagePanel(ExifPanel):
     def begin(self):
         if self.active() or not self.database:
             return
-        if not self.executable.text().strip():
+        if self.stage != "reconcile" and not self.executable.text().strip():
             self.report.setText("Local model files are required.")
             return
         context = multiprocessing.get_context("spawn")

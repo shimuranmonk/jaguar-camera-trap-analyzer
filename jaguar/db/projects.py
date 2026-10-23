@@ -31,6 +31,16 @@ MIGRATIONS = ((1, (
 )), (5, (
     "CREATE TABLE detections (id TEXT PRIMARY KEY, record_id TEXT NOT NULL REFERENCES processing_records(id), image_id TEXT NOT NULL REFERENCES images(id), run_id TEXT NOT NULL REFERENCES processing_runs(id), class TEXT NOT NULL CHECK(class IN ('animal','person','vehicle')), confidence REAL NOT NULL CHECK(confidence>=0 AND confidence<=1), x REAL NOT NULL, y REAL NOT NULL, width REAL NOT NULL, height REAL NOT NULL, model_version TEXT NOT NULL, threshold REAL NOT NULL)",
     "CREATE INDEX detections_image_class ON detections(image_id,class)",
+)), (6, (
+    "CREATE TABLE metadata_observations (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), field TEXT NOT NULL, source TEXT NOT NULL, value_json TEXT, raw_json TEXT, confidence REAL, source_record_id TEXT NOT NULL, observed_at TEXT NOT NULL)",
+    "CREATE TABLE metadata_resolved (image_id TEXT NOT NULL REFERENCES images(id), field TEXT NOT NULL, value_json TEXT, source TEXT, provenance_json TEXT, conflict INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(image_id,field))",
+    "CREATE TABLE audit_events (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), field TEXT NOT NULL, old_json TEXT, new_json TEXT, actor TEXT NOT NULL, reason TEXT NOT NULL, action TEXT NOT NULL, at TEXT NOT NULL)",
+    "CREATE TABLE human_overrides (image_id TEXT NOT NULL REFERENCES images(id), field TEXT NOT NULL, value_json TEXT, event_id TEXT NOT NULL REFERENCES audit_events(id), active INTEGER NOT NULL, PRIMARY KEY(image_id,field))",
+    "CREATE TABLE reviews (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), reason TEXT NOT NULL, fingerprint TEXT NOT NULL, detail_json TEXT, status TEXT NOT NULL, created_at TEXT NOT NULL, resolved_at TEXT, UNIQUE(image_id,fingerprint))",
+    "CREATE INDEX reviews_status ON reviews(status,image_id)",
+    "CREATE TABLE cameras (id TEXT PRIMARY KEY, make TEXT, model TEXT, serial TEXT, label TEXT NOT NULL, created_at TEXT NOT NULL)",
+    "CREATE TABLE deployments (id TEXT PRIMARY KEY, camera_id TEXT REFERENCES cameras(id), site_label TEXT NOT NULL, start_at TEXT, end_at TEXT, notes TEXT)",
+    "CREATE TABLE image_assignments (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), camera_id TEXT REFERENCES cameras(id), deployment_id TEXT REFERENCES deployments(id), actor TEXT NOT NULL, assigned_at TEXT NOT NULL)",
 )),)
 
 

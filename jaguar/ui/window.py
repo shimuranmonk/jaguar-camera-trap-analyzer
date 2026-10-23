@@ -10,6 +10,7 @@ from jaguar.ui.exif_panel import ExifPanel
 from jaguar.ui.dashboard import Dashboard
 from jaguar.ui.theme import STYLE
 from jaguar.ui.stage_panel import StagePanel
+from jaguar.ui.review_panel import ReviewPanel
 
 
 class MainWindow(QMainWindow):
@@ -24,6 +25,8 @@ class MainWindow(QMainWindow):
         self.exif_panel = ExifPanel()
         self.ocr_panel = StagePanel("ocr")
         self.detection_panel = StagePanel("detect")
+        self.reconcile_panel = StagePanel("reconcile")
+        self.review_panel = ReviewPanel()
         self.dashboard = Dashboard()
         container = QWidget()
         layout = QHBoxLayout(container)
@@ -42,6 +45,9 @@ class MainWindow(QMainWindow):
         content.addLayout(actions)
         self.pages = QStackedWidget()
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
+            if title == "Review Queue":
+                self.pages.addWidget(self.review_panel)
+                continue
             if title == "Dashboard":
                 self.pages.addWidget(self.dashboard)
                 continue
@@ -50,6 +56,7 @@ class MainWindow(QMainWindow):
                 processing.addTab(self.exif_panel, "EXIF")
                 processing.addTab(self.ocr_panel, "Overlay OCR")
                 processing.addTab(self.detection_panel, "Detection")
+                processing.addTab(self.reconcile_panel, "Reconcile")
                 self.pages.addWidget(processing)
                 continue
             if title == "Projects / Import":
@@ -82,6 +89,8 @@ class MainWindow(QMainWindow):
         self.exif_panel.set_project(path)
         self.ocr_panel.set_project(path)
         self.detection_panel.set_project(path)
+        self.reconcile_panel.set_project(path)
+        self.review_panel.set_project(path)
         self.dashboard.database = path
         self.dashboard.refresh()
         self.project_label.setText(f"Project: {project.name}")
@@ -119,10 +128,11 @@ class MainWindow(QMainWindow):
             self.exif_panel.request_pause()
             self.ocr_panel.request_pause()
             self.detection_panel.request_pause()
+            self.reconcile_panel.request_pause()
             self.statusBar().showMessage("Import is pausing. The window can close after the checkpoint completes.")
             event.ignore()
         else:
             event.accept()
 
     def processing_active(self):
-        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel])
+        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel])

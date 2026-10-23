@@ -68,3 +68,28 @@ class UiTests(unittest.TestCase):
                         panel.process.join(5)
                     panel.poll()
                 window.close()
+
+    def test_export_worker_reports_completion_and_creates_readable_workbook(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'project.sqlite'
+            output=Path(folder)/'export.xlsx'
+            create_project(path,'Empty export')
+            window=MainWindow()
+            window.load_project(path)
+            panel=window.export_panel
+            panel.path.setText(str(output))
+            panel.begin()
+            try:
+                deadline=time.monotonic()+20
+                while panel.active() and time.monotonic()<deadline:
+                    self.app.processEvents()
+                    time.sleep(.01)
+                self.assertFalse(panel.active())
+                self.assertIn('Exported 0 images',panel.status.text())
+                self.assertTrue(output.is_file())
+            finally:
+                if panel.active():
+                    panel.process.terminate()
+                    panel.process.join(5)
+                    panel.poll()
+                window.close()

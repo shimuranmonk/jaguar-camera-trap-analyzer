@@ -15,6 +15,7 @@ from jaguar.ui.images_panel import ImagesPanel
 from jaguar.ui.cameras_panel import CamerasPanel
 from jaguar.ui.settings_panel import SettingsPanel
 from jaguar.core.settings import read_settings
+from jaguar.ui.export_panel import ExportPanel
 
 
 class MainWindow(QMainWindow):
@@ -37,6 +38,7 @@ class MainWindow(QMainWindow):
         self.settings_panel = SettingsPanel()
         self.settings_panel.saved.connect(self.apply_settings)
         self.dashboard = Dashboard()
+        self.export_panel=ExportPanel(self.export_scope)
         container = QWidget()
         layout = QHBoxLayout(container)
         self.sidebar = QListWidget()
@@ -54,7 +56,7 @@ class MainWindow(QMainWindow):
         content.addLayout(actions)
         self.pages = QStackedWidget()
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
-            page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel}
+            page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel,'Export':self.export_panel}
             if title in page_map:
                 self.pages.addWidget(page_map[title])
                 continue
@@ -104,6 +106,7 @@ class MainWindow(QMainWindow):
         self.detection_panel.set_project(path)
         self.reconcile_panel.set_project(path)
         self.review_panel.set_project(path)
+        self.export_panel.set_project(path)
         for panel in [self.images_panel,self.detections_page,self.cameras_panel,self.settings_panel]:
             panel.set_project(path)
         self.apply_settings()
@@ -138,6 +141,10 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Project could not be opened", str(error))
 
     def closeEvent(self, event):
+        if self.export_panel.active():
+            self.statusBar().showMessage('The workbook is still being written. Closing is available after export finishes.')
+            event.ignore()
+            return
         if self.processing_active():
             self.import_panel.request_pause()
             self.exif_panel.request_pause()
@@ -150,7 +157,7 @@ class MainWindow(QMainWindow):
             event.accept()
 
     def processing_active(self):
-        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel])
+        return self.export_panel.active() or any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel])
 
     def apply_settings(self):
         if self.project_path:
@@ -163,3 +170,6 @@ class MainWindow(QMainWindow):
         panels={0:self.dashboard,3:self.images_panel,4:self.cameras_panel,5:self.detections_page,6:self.review_panel}
         if index in panels:
             panels[index].refresh()
+
+    def export_scope(self):
+        return {'camera_id':self.dashboard.camera.currentData(),'start_date':self.dashboard.start.text().strip() or None,'end_date':self.dashboard.end.text().strip() or None,'run_id':self.dashboard.run.currentData()}

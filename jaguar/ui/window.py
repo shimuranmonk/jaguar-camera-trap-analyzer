@@ -2,13 +2,14 @@ from pathlib import Path
 import sqlite3
 
 from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel,
-    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget)
+    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget, QTabWidget)
 
 from jaguar.db.projects import create_project, open_project
 from jaguar.ui.import_panel import ImportPanel
 from jaguar.ui.exif_panel import ExifPanel
 from jaguar.ui.dashboard import Dashboard
 from jaguar.ui.theme import STYLE
+from jaguar.ui.stage_panel import StagePanel
 
 
 class MainWindow(QMainWindow):
@@ -21,6 +22,7 @@ class MainWindow(QMainWindow):
         self.project_path = None
         self.import_panel = ImportPanel()
         self.exif_panel = ExifPanel()
+        self.ocr_panel = StagePanel("ocr")
         self.dashboard = Dashboard()
         container = QWidget()
         layout = QHBoxLayout(container)
@@ -43,7 +45,10 @@ class MainWindow(QMainWindow):
                 self.pages.addWidget(self.dashboard)
                 continue
             if title == "Processing":
-                self.pages.addWidget(self.exif_panel)
+                processing = QTabWidget()
+                processing.addTab(self.exif_panel, "EXIF")
+                processing.addTab(self.ocr_panel, "Overlay OCR")
+                self.pages.addWidget(processing)
                 continue
             if title == "Projects / Import":
                 self.pages.addWidget(self.import_panel)
@@ -66,20 +71,21 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Gate 3 | EXIF metadata extraction")
 
     def load_project(self, path: Path):
-        if self.import_panel.active() or self.exif_panel.active():
+        if self.processing_active():
             raise ValueError("The current import must pause before another project opens.")
         project = open_project(path)
         self.project = project
         self.project_path = path
         self.import_panel.set_project(path)
         self.exif_panel.set_project(path)
+        self.ocr_panel.set_project(path)
         self.dashboard.database = path
         self.dashboard.refresh()
         self.project_label.setText(f"Project: {project.name}")
         self.statusBar().showMessage("Project opened")
 
     def create(self):
-        if self.import_panel.active() or self.exif_panel.active():
+        if self.processing_active():
             QMessageBox.information(self, "Import active", "The current import must pause before another project opens.")
             return
         name, accepted = QInputDialog.getText(self, "Create project", "Project name")
@@ -94,7 +100,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Project could not be created", str(error))
 
     def open(self):
-        if self.import_panel.active() or self.exif_panel.active():
+        if self.processing_active():
             QMessageBox.information(self, "Import active", "The current import must pause before another project opens.")
             return
         path, _ = QFileDialog.getOpenFileName(self, "Open project", "", "JAGUAR project (*.sqlite)")
@@ -105,10 +111,14 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Project could not be opened", str(error))
 
     def closeEvent(self, event):
-        if self.import_panel.active() or self.exif_panel.active():
+        if self.processing_active():
             self.import_panel.request_pause()
             self.exif_panel.request_pause()
+            self.ocr_panel.request_pause()
             self.statusBar().showMessage("Import is pausing. The window can close after the checkpoint completes.")
             event.ignore()
         else:
             event.accept()
+
+    def processing_active(self):
+        return any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel])

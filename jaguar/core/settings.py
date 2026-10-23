@@ -1,13 +1,14 @@
 import json
 import sqlite3
 import sys
+import os
 from contextlib import closing
 from pathlib import Path
 from jaguar.ingest.service import import_lock
 
 
 def defaults():
-    resources=Path(sys.executable).parent/'resources' if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[2]/'assets'
+    resources=Path(os.environ['JAGUAR_RESOURCE_ROOT']) if os.environ.get('JAGUAR_RESOURCE_ROOT') else (Path(sys.executable).parent/'resources' if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[2]/'assets')
     return {'detection_threshold':.2,'timestamp_tolerance_seconds':0,'temperature_tolerance_c':1,
         'device':'auto','exiftool_path':str(resources/'exiftool/ExifTool.exe'),
         'ocr_models':str(resources/'ocr-models'),'detector_models':str(resources/'detector-models')}

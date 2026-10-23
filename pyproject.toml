@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jaguar-camera-trap-analyzer"
-version = "0.8.0"
+version = "0.9.0"
 description = "JAGUAR camera trap data analyzer"
 requires-python = ">=3.13,<3.14"
 dependencies = ["PySide6==6.10.0", "openpyxl==3.1.5"]

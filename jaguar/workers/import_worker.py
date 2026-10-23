@@ -38,7 +38,7 @@ def run_exif(database, executable, stop, messages):
             pass
 
 
-def run_processing(database, stage, model_root, stop, messages):
+def run_processing(database, stage, model_root, stop, messages, scope=None):
     def publish(value):
         try:
             messages.put_nowait(value)
@@ -55,13 +55,16 @@ def run_processing(database, stage, model_root, stop, messages):
             engine = PaddleEngine(model_root)
         elif stage == "detect":
             from jaguar.adapters.megadetector import Detector
-            engine = Detector(model_root, threshold=settings.get("detection_threshold", .2))
+            engine = Detector(model_root, threshold=settings.get("detection_threshold", .2),device=settings.get('device','auto'))
         elif stage == "reconcile":
             from jaguar.core.reconciliation import Reconciler
             engine = Reconciler(settings.get("timestamp_tolerance_seconds", 0), settings.get("temperature_tolerance_c", 1))
         else:
             raise ValueError("Unsupported processing stage.")
-        result = run_stage(database, stage, {"model_root": model_root, "settings": settings}, engine, stop.is_set, publish)
+        config = {"model_root": model_root, "settings": settings}
+        if scope is not None:
+            config["image_ids"] = scope
+        result = run_stage(database, stage, config, engine, stop.is_set, publish)
         messages.put({"final": result}, timeout=2)
     except Exception as error:
         try:

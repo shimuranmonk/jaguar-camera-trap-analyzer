@@ -36,3 +36,26 @@ def run_exif(database, executable, stop, messages):
             messages.put({"error": message}, timeout=2)
         except queue.Full:
             pass
+
+
+def run_processing(database, stage, model_root, stop, messages):
+    def publish(value):
+        try:
+            messages.put_nowait(value)
+        except queue.Full:
+            pass
+    try:
+        from jaguar.core.stages import run_stage
+        if stage == "ocr":
+            from jaguar.adapters.paddle_ocr import PaddleEngine
+            engine = PaddleEngine(model_root)
+        else:
+            from jaguar.adapters.megadetector import Detector
+            engine = Detector(model_root)
+        result = run_stage(database, stage, {"model_root": model_root}, engine, stop.is_set, publish)
+        messages.put({"final": result}, timeout=2)
+    except Exception as error:
+        try:
+            messages.put({"error": str(error)[:2000]}, timeout=2)
+        except queue.Full:
+            pass

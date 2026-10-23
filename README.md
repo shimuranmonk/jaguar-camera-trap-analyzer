@@ -4,13 +4,14 @@
 
 JAGUAR is a Windows desktop application for turning mixed-brand camera-trap photographs into reliable, analysis-ready Excel data. Frozen MVP 1 covers metadata extraction, overlay OCR, animal/person/vehicle detection, human review, and traceable exports while preserving original images.
 
-The application uses Python, PySide6, and SQLite. The current build includes local projects, resumable imports, duplicate detection, EXIF extraction, and an initial dashboard with live project statistics.
+The application uses Python, PySide6, and SQLite. The current build includes local projects, resumable imports, duplicate detection, EXIF extraction, overlay OCR, and a dashboard with live project statistics.
 
 ## Core features
 
 - Recursive JPG, JPEG, JFIF, and PNG imports with SHA-256 identity and preserved source files.
 - EXIF extraction with retained raw metadata, source references, and explicit missing values.
-- Planned MVP stages: overlay OCR, animal/person/vehicle detection, audited human review, and multi-sheet Excel export.
+- Versioned OCR profiles, generic fallback, retained text/confidence/regions, and separate Fahrenheit/Celsius observations.
+- Planned MVP stages: animal/person/vehicle detection, audited human review, and multi-sheet Excel export.
 - Offline Windows operation with processing history, recovery checkpoints, and later installer packaging.
 
 ## Possible future additions

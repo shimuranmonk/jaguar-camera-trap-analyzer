@@ -22,6 +22,12 @@ MIGRATIONS = ((1, (
     "CREATE TABLE exif_runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), status TEXT NOT NULL, tool_version TEXT NOT NULL, normalizer_version TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT)",
     "CREATE TABLE exif_records (id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES exif_runs(id), image_id TEXT NOT NULL REFERENCES images(id), source_path TEXT NOT NULL, status TEXT NOT NULL, raw_json TEXT, normalized_json TEXT, stderr TEXT, error TEXT, extracted_at TEXT NOT NULL, UNIQUE(run_id,image_id))",
     "CREATE INDEX exif_records_image ON exif_records(image_id,extracted_at)",
+)), (4, (
+    "CREATE TABLE profile_assignments (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), profile_id TEXT NOT NULL, profile_version INTEGER NOT NULL, actor TEXT NOT NULL, assigned_at TEXT NOT NULL)",
+    "CREATE TABLE processing_runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), stage TEXT NOT NULL, config_json TEXT NOT NULL, config_hash TEXT NOT NULL, status TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT)",
+    "CREATE TABLE processing_records (id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES processing_runs(id), image_id TEXT NOT NULL REFERENCES images(id), status TEXT NOT NULL, payload_json TEXT, error TEXT, processed_at TEXT NOT NULL, UNIQUE(run_id,image_id))",
+    "CREATE INDEX processing_runs_stage ON processing_runs(stage,config_hash,status)",
+    "CREATE INDEX processing_records_image ON processing_records(image_id,run_id)",
 )),)
 
 

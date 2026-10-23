@@ -5,7 +5,8 @@ from pathlib import Path
 
 
 def configure_logging() -> Path:
-    folder = Path(os.environ.get("LOCALAPPDATA", Path.home() / ".local" / "share")) / "JAGUAR" / "logs"
+    data_root=Path(os.environ['JAGUAR_DATA_DIR']) if os.environ.get('JAGUAR_DATA_DIR') else Path(os.environ.get("LOCALAPPDATA", Path.home() / ".local" / "share")) / "JAGUAR"
+    folder=data_root/'logs'
     folder.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("jaguar")
     logger.setLevel(logging.INFO)

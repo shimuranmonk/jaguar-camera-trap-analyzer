@@ -13,8 +13,8 @@ The application uses Python, PySide6, and SQLite. The current build includes res
 - Versioned OCR profiles, generic fallback, retained text/confidence/regions, and separate Fahrenheit/Celsius observations.
 - Animal/person/vehicle boxes, metadata conflict review, reversible corrections, and separate camera/deployment assignments.
 - Multi-sheet Excel export with documented row grains, provenance, review history, numeric fields, and formula-injection protection.
-- Installer packaging and larger field-data acceptance remain in progress.
-- Offline Windows operation with processing history, recovery checkpoints, and later installer packaging.
+- Offline Windows operation with processing history and recovery checkpoints.
+- A Windows preview package with a bundled runtime and local models; field acceptance and redistribution review remain pending.
 
 ## Possible future additions
 

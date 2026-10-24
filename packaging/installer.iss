@@ -26,7 +26,7 @@ UninstallDisplayIcon={app}\JAGUAR.exe
 CloseApplications=yes
 RestartApplications=no
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "\runtime\Lib\site-packages\torch\include\*,\runtime\Lib\site-packages\paddle\include\*,*\__pycache__\*,*.pyc"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{group}\The JAGUAR Preview"; Filename: "{app}\JAGUAR.exe"
 [Run]

@@ -28,6 +28,8 @@ class UiTests(unittest.TestCase):
             window.load_project(path)
             self.assertEqual(window.project, project)
             self.assertEqual(window.sidebar.count(), 10)
+            from PySide6.QtWidgets import QScrollArea
+            self.assertIsInstance(window.pages.widget(9),QScrollArea)
             self.assertEqual(window.project_label.text(), "Project: Survey")
             window.close()
 

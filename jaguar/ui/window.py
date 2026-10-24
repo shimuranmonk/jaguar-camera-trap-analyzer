@@ -2,7 +2,7 @@ from pathlib import Path
 import sqlite3
 
 from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel,
-    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget, QTabWidget)
+    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget, QTabWidget,QScrollArea)
 
 from jaguar.db.projects import create_project, open_project
 from jaguar.ui.import_panel import ImportPanel
@@ -61,7 +61,13 @@ class MainWindow(QMainWindow):
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
             page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel,'Export':self.export_panel,'Species':self.species_panel}
             if title in page_map:
-                self.pages.addWidget(page_map[title])
+                if title=='Species':
+                    scroll=QScrollArea()
+                    scroll.setWidgetResizable(True)
+                    scroll.setWidget(page_map[title])
+                    self.pages.addWidget(scroll)
+                else:
+                    self.pages.addWidget(page_map[title])
                 continue
             if title == "Review Queue":
                 self.pages.addWidget(self.review_panel)

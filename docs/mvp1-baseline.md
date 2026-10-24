@@ -6,7 +6,7 @@ The approved pipeline recursively discovers JPG, JPEG, JFIF, and PNG images, pre
 
 The architecture uses PySide6, isolated inference workers, CPU fallback, hardware-aware batching, and later PyInstaller one-folder/Inno Setup packaging. A 5,000-plus-image acceptance workload follows smaller benchmarks on original mixed-brand images.
 
-Species classification, video, cloud services, multi-user accounts, ecological analytics, maps, trap-night statistics, and capture-event grouping remain excluded. Zero accepted detections never establishes a confirmed blank image.
+Species classification was subsequently authorized as the offline SpeciesNet and human-review extension documented in species-identification.md. Video, cloud services, multi-user accounts, ecological analytics, maps, trap-night statistics, and capture-event grouping remain excluded. Zero accepted detections never establishes a confirmed blank image.
 
 The dashboard follows the approved AddaxAI-inspired information architecture, with real stored metrics and clearly labeled missing states. The supplied dashboard reference and seven Bushnell originals informed the local implementation and validation; broader mixed-brand originals remain outstanding.
 

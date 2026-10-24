@@ -43,6 +43,11 @@ MIGRATIONS = ((1, (
     "CREATE TABLE image_assignments (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), camera_id TEXT REFERENCES cameras(id), deployment_id TEXT REFERENCES deployments(id), actor TEXT NOT NULL, assigned_at TEXT NOT NULL)",
 )), (7, (
     "CREATE TABLE exports (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), path TEXT NOT NULL, created_at TEXT NOT NULL, config_json TEXT NOT NULL, counts_json TEXT NOT NULL, sha256 TEXT NOT NULL, app_version TEXT NOT NULL)",
+)), (8, (
+    "CREATE TABLE species_reviews (id TEXT PRIMARY KEY, image_id TEXT NOT NULL REFERENCES images(id), target_key TEXT NOT NULL, detection_id TEXT REFERENCES detections(id), source_record_id TEXT REFERENCES processing_records(id), label TEXT, scientific_name TEXT, status TEXT NOT NULL CHECK(status IN ('confirmed','unidentified','unreviewed')), actor TEXT NOT NULL, reason TEXT NOT NULL, reviewed_at TEXT NOT NULL)",
+    "CREATE INDEX species_reviews_image ON species_reviews(image_id,target_key)",
+)), (9, (
+    "CREATE TABLE species_locations (image_id TEXT PRIMARY KEY REFERENCES images(id), country TEXT NOT NULL, admin1 TEXT NOT NULL, actor TEXT NOT NULL, reason TEXT NOT NULL, updated_at TEXT NOT NULL)",
 )),)
 
 

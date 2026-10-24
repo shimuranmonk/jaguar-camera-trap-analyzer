@@ -1,6 +1,7 @@
 """One-row-per-image source columns for researcher analysis."""
 import json
 from pathlib import Path
+from jaguar.export.species import summary
 
 
 def analysis_rows(connection):
@@ -49,6 +50,7 @@ def analysis_rows(connection):
             row['ocr_warnings'] = '; '.join(parsed.get('warnings', [])) or None
         row['has_metadata_conflict'] = bool(connection.execute('SELECT 1 FROM metadata_resolved WHERE image_id=? AND conflict=1 LIMIT 1', (image,)).fetchone())
         row['open_review_cases'] = connection.execute("SELECT count(*) FROM reviews WHERE image_id=? AND status='open'", (image,)).fetchone()[0]
+        row.update(summary(connection,image))
         # Long text becomes additional columns, keeping one row per image.
         expanded = {}
         for key, value in row.items():
@@ -70,7 +72,9 @@ def write_analysis(connection, sheets):
         'ocr_camera_site_label ocr_brand ocr_timezone_known ocr_temperature_f ocr_temperature_c '
         'ocr_temperature_f_candidate_count ocr_temperature_c_candidate_count ocr_text '
         'ocr_min_confidence ocr_profile_id ocr_profile_version ocr_review_required ocr_warnings '
-        'has_metadata_conflict open_review_cases').split())
+        'has_metadata_conflict open_review_cases species_status species_record_id species_suggestions '
+        'species_confirmed_labels species_confirmed_scientific_names species_confirmed_count species_review_required '
+        'species_filter_country species_filter_admin1').split())
     for row in analysis_rows(connection):
         columns.update(row)
     headers = ['image_id', 'filename'] + sorted(columns - {'image_id', 'filename'})

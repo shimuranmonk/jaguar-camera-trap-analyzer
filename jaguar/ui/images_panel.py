@@ -52,7 +52,7 @@ class ImagesPanel(QWidget):
         panel.addWidget(self.view,2)
         self.tabs=QTabWidget()
         self.texts={}
-        for title in ["Selected values", "EXIF", "Overlay OCR", "Detections"]:
+        for title in ["Selected values", "EXIF", "Overlay OCR", "Detections", 'Species evidence']:
             editor=QPlainTextEdit()
             editor.setReadOnly(True)
             self.texts[title]=editor
@@ -132,7 +132,7 @@ class ImagesPanel(QWidget):
             resolved=connection.execute("SELECT field,value_json,source,conflict,provenance_json FROM metadata_resolved WHERE image_id=? ORDER BY field",(image_id,)).fetchall()
             exif=connection.execute("SELECT raw_json,error FROM exif_records WHERE image_id=? ORDER BY rowid DESC LIMIT 1",(image_id,)).fetchone()
             records={}
-            for stage in ['ocr','detect']:
+            for stage in ['ocr','detect','species']:
                 records[stage]=connection.execute("SELECT r.payload_json,r.error FROM processing_records r JOIN processing_runs p ON p.id=r.run_id WHERE image_id=? AND p.stage=? ORDER BY r.rowid DESC LIMIT 1",(image_id,stage)).fetchone()
         def format_payload(value):
             if not value:
@@ -151,6 +151,7 @@ class ImagesPanel(QWidget):
         self.texts['EXIF'].setPlainText(format_payload(exif))
         self.texts['Overlay OCR'].setPlainText(format_payload(records['ocr']))
         self.texts['Detections'].setPlainText(format_payload(records['detect']))
+        self.texts['Species evidence'].setPlainText(format_payload(records['species']))
         self.scene.clear()
         path=None
         for row in paths:

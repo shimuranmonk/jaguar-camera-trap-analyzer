@@ -27,7 +27,7 @@ class UiTests(unittest.TestCase):
             self.app.processEvents()
             window.load_project(path)
             self.assertEqual(window.project, project)
-            self.assertEqual(window.sidebar.count(), 9)
+            self.assertEqual(window.sidebar.count(), 10)
             self.assertEqual(window.project_label.text(), "Project: Survey")
             window.close()
 

@@ -43,7 +43,7 @@ class SpeciesEngine:
         try:
             ready = self.request({'model_root': str(self.root)})
             self.runtime_info=ready
-            self.version = 'SpeciesNet ' + ready['package_version'] + ' | model ' + ready['model_version'] + ' | ' + json.dumps(self.assets, sort_keys=True)
+            self.version = 'JAGUAR Species adapter 2 | SpeciesNet ' + ready['package_version'] + ' | model ' + ready['model_version'] + ' | ' + json.dumps(self.assets, sort_keys=True)
         except Exception:
             self.close()
             raise

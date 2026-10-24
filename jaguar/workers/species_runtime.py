@@ -10,7 +10,9 @@ import tempfile
 
 
 def emit(value):
-    print('JAGUAR_RESULT:' + json.dumps(value, ensure_ascii=False), flush=True)
+    # Embedded Windows Python ignores encoding environment variables. ASCII
+    # escaping preserves every Unicode label regardless of its console locale.
+    print('JAGUAR_RESULT:' + json.dumps(value, ensure_ascii=True), flush=True)
 
 
 def main():
@@ -43,7 +45,7 @@ def main():
             from PIL import Image
             classifier = SpeciesNetClassifier(str(root), device='cpu')
             ensemble = SpeciesNetEnsemble(str(root))
-        emit({'ready': True, 'package_version': importlib.metadata.version('speciesnet'), 'model_version': info['version'], 'format_version':FORMAT_VERSION})
+        emit({'ready': True, 'package_version': importlib.metadata.version('speciesnet'), 'model_version': info['version'], 'format_version':FORMAT_VERSION,'transport':'ascii-json-v2'})
     except Exception as error:
         emit({'error': str(error)})
         return

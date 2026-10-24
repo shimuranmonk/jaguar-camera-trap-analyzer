@@ -106,3 +106,18 @@ class SpeciesTests(unittest.TestCase):
         self.assertEqual(len(error),2000)
         self.assertEqual(len(json.loads(payload)['failure']['error']),3000)
         self.assertEqual(json.loads(payload)['failure']['unknown_native_field'],[1,2,3])
+
+    def test_worker_protocol_preserves_unicode_under_windows_encoding(self):
+        import importlib.util
+        import io
+        from unittest.mock import patch
+        path=Path(__file__).resolve().parents[1]/'jaguar/workers/species_runtime.py'
+        spec=importlib.util.spec_from_file_location('species_protocol',path)
+        module=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        output=io.StringIO()
+        value={'label':'g\u00fci\u00f1a \u00e1 \u062d\u064a\u0648\u0627\u0646'}
+        with patch('sys.stdout',output):
+            module.emit(value)
+        wire=output.getvalue().encode('cp1252').decode('utf-8')
+        self.assertEqual(json.loads(wire.split(':',1)[1]),value)

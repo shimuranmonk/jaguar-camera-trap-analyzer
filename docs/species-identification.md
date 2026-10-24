@@ -28,6 +28,8 @@ Analysis Data retains one row per image and adds suggestion summaries, confirmed
 
 ## Validation limits
 
+The worker protocol uses ASCII-escaped JSON so Windows console encodings cannot corrupt accented or non-Latin labels. The validated packaged run checks every returned classifier label against the official label file, and native payload chunks reconstruct exactly from Excel. Prototype processing attempts remain historical evidence rather than replacing validated latest results.
+
 The unfiltered seven-image trial completed without processing failures. Five accepted detections each returned 2,498 candidate scores; two detector-missed images produced no classification and remained review cases. The feral goat received a domestic-goat suggestion and the human received a human label. The sheep received Bovidae family, the Sandgrouse received a generic animal result, and the supplied Arabian Tahr label disagreed with a domestic-goat suggestion. These results establish integration behavior, not broad species accuracy. Every suggestion starts unreviewed. Larger verified regional datasets, night images, mixed-species scenes, and physical GPU validation remain outstanding.
 
 The downloaded classifier label list does not contain Arabian tahr, Barbary sheep/Ammotragus, sandgrouse, or Hume's wheatear. Its wheatear entry is northern wheatear. Geographic filtering cannot introduce a species absent from that label list. Exact regional identifications therefore require manual annotation or a separately evaluated regional classifier/fine-tuning stage. These limitations remain visible in the preview documentation rather than being hidden by an automatic acceptance threshold.

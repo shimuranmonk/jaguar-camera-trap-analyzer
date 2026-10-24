@@ -13,7 +13,7 @@ class SettingsPanel(QWidget):
         layout.addWidget(QLabel('Local models and processing settings'))
         form=QFormLayout()
         self.fields={}
-        for name,label in [('exiftool_path','ExifTool executable'),('ocr_models','OCR model folder'),('detector_models','MegaDetector model folder')]:
+        for name,label in [('exiftool_path','ExifTool executable'),('ocr_models','OCR model folder'),('detector_models','MegaDetector model folder'),('species_models','SpeciesNet model folder'),('species_python','SpeciesNet Python executable')]:
             widget=QWidget()
             row=QHBoxLayout(widget)
             row.setContentsMargins(0,0,0,0)
@@ -24,6 +24,10 @@ class SettingsPanel(QWidget):
             browse.clicked.connect(lambda checked=False,name=name:self.browse(name))
             row.addWidget(browse)
             form.addRow(label,widget)
+        for name,label in [('species_country','Species country (optional ISO alpha-3)'),('species_admin1','Species state (USA only, optional)')]:
+            entry=QLineEdit()
+            self.fields[name]=entry
+            form.addRow(label,entry)
         for name,label,maximum in [('detection_threshold','Detection confidence threshold',1),('timestamp_tolerance_seconds','Timestamp conflict tolerance (seconds)',3600),('temperature_tolerance_c','Temperature conflict tolerance (C)',100)]:
             entry=QDoubleSpinBox()
             entry.setRange(0,maximum)
@@ -53,7 +57,7 @@ class SettingsPanel(QWidget):
         self.device.setCurrentText(settings['device'])
 
     def browse(self,name):
-        value=QFileDialog.getOpenFileName(self,'ExifTool executable','','Executable (*.exe)')[0] if name=='exiftool_path' else QFileDialog.getExistingDirectory(self,'Local model folder')
+        value=QFileDialog.getOpenFileName(self,'Local executable','','Executable (*.exe)')[0] if name in {'exiftool_path','species_python'} else QFileDialog.getExistingDirectory(self,'Local model folder')
         if value:
             self.fields[name].setText(value)
 

@@ -49,6 +49,9 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
             if stage == "ocr":
                 config["profiles"] = [p.snapshot() for p in PROFILES.values()]
                 config["assignments"] = connection.execute("SELECT image_id,profile_id,profile_version FROM profile_assignments ORDER BY rowid").fetchall()
+            if stage == 'species':
+                config['detector_revision'] = connection.execute("SELECT coalesce(max(r.rowid),0) FROM processing_records r JOIN processing_runs p ON p.id=r.run_id WHERE p.stage='detect'").fetchone()[0]
+                config['locations']=connection.execute('SELECT image_id,country,admin1 FROM species_locations ORDER BY image_id').fetchall()
             encoded = json.dumps(config, sort_keys=True)
             config_hash = hashlib.sha256(encoded.encode()).hexdigest()
             old = connection.execute("SELECT id FROM processing_runs WHERE stage=? AND config_hash=? AND status IN ('running','paused') ORDER BY rowid DESC LIMIT 1", (stage, config_hash)).fetchone()
@@ -86,7 +89,7 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
                                 break
                         if path is None:
                             raise ValueError("Source is unavailable or changed; a new import is required.")
-                        payload = ocr_payload(connection, image_id, path, engine) if stage == "ocr" else engine.extract(path)
+                        payload = engine.extract_for_source(connection, image_id, path) if hasattr(engine, 'extract_for_source') else (ocr_payload(connection, image_id, path, engine) if stage == "ocr" else engine.extract(path))
                         if fingerprint(path, stopped) != expected:
                             raise ValueError("Source changed during processing; output rejected.")
                 except InterruptedError:
@@ -94,6 +97,8 @@ def run_stage(database, stage, config, engine, stopped=lambda: False, progress=l
                     break
                 except Exception as failure:
                     error = str(failure)[:2000]
+                    if stage=='species':
+                        payload={'failure':getattr(failure,'details',{'error':str(failure)}),'engine_version':engine.version}
                 status = "failed" if error else "succeeded"
                 with connection:
                     if hasattr(engine, "save") and not error:

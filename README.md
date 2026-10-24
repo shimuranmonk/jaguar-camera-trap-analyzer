@@ -14,12 +14,13 @@ The application uses Python, PySide6, and SQLite. The current build includes res
 - Animal/person/vehicle boxes, metadata conflict review, reversible corrections, and separate camera/deployment assignments.
 - Multi-sheet Excel export with documented row grains, provenance, review history, numeric fields, and formula-injection protection.
 - An Analysis Data worksheet with one row per image and separate EXIF/OCR columns for custom analysis.
+- Offline SpeciesNet suggestions per detection, complete candidate scores, audited manual identification, and separate confirmed labels in Excel.
 - Offline Windows operation with processing history and recovery checkpoints.
 - A Windows preview package with a bundled runtime and local models; field acceptance and redistribution review remain pending.
 
 ## Possible future additions
 
-Species classification, maps, capture-event grouping, and ecological analysis may be considered after MVP 1. These are possibilities subject to separate approval, rather than committed features.
+Maps, capture-event grouping, and ecological analysis may be considered after the current extraction and species-review workflow. These are possibilities subject to separate approval, rather than committed features.
 
 ## Development
 

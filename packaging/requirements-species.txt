@@ -1,0 +1,9 @@
+# SpeciesNet runs in its own interpreter; the detector environment stays separate.
+speciesnet==5.0.6
+yolov5==7.0.11
+onnx2torch==1.5.15
+onnx==1.23.2
+kagglehub==1.0.3
+reverse_geocoder==1.5.1
+cloudpathlib==0.26.0
+humanfriendly==10.0

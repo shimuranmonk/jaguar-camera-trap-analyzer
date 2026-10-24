@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont,QFontDatabase
 from PySide6.QtCore import QTimer
 
 from jaguar.core.config import configure_logging
@@ -18,6 +18,10 @@ def main() -> int:
     arguments,qt_args=parser.parse_known_args(sys.argv[1:])
     configure_logging()
     app = QApplication([sys.argv[0],*qt_args])
+    import os
+    font=Path(os.environ.get('WINDIR','C:/Windows'))/'Fonts/segoeui.ttf'
+    if font.is_file():
+        QFontDatabase.addApplicationFont(str(font))
     app.setFont(QFont("Segoe UI", 10))
     app.setApplicationName("JAGUAR")
     window = MainWindow()

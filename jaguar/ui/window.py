@@ -2,7 +2,7 @@ from pathlib import Path
 import sqlite3
 
 from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel,
-    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget, QTabWidget)
+    QListWidget, QMainWindow, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget, QTabWidget,QScrollArea)
 
 from jaguar.db.projects import create_project, open_project
 from jaguar.ui.import_panel import ImportPanel
@@ -16,6 +16,7 @@ from jaguar.ui.cameras_panel import CamerasPanel
 from jaguar.ui.settings_panel import SettingsPanel
 from jaguar.core.settings import read_settings
 from jaguar.ui.export_panel import ExportPanel
+from jaguar.ui.species_panel import SpeciesPanel
 
 
 class MainWindow(QMainWindow):
@@ -31,6 +32,8 @@ class MainWindow(QMainWindow):
         self.ocr_panel = StagePanel("ocr")
         self.detection_panel = StagePanel("detect")
         self.reconcile_panel = StagePanel("reconcile")
+        self.species_stage = StagePanel('species')
+        self.species_panel = SpeciesPanel(self.species_stage)
         self.review_panel = ReviewPanel()
         self.images_panel = ImagesPanel()
         self.detections_page = ImagesPanel(True)
@@ -43,7 +46,7 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout(container)
         self.sidebar = QListWidget()
         self.sidebar.setFixedWidth(190)
-        self.sidebar.addItems(["Dashboard", "Projects / Import", "Processing", "Images", "Cameras", "Detections", "Review Queue", "Export", "Settings"])
+        self.sidebar.addItems(["Dashboard", "Projects / Import", "Processing", "Images", "Cameras", "Detections", "Review Queue", "Export", "Settings", 'Species'])
         layout.addWidget(self.sidebar)
         content = QVBoxLayout()
         self.project_label = QLabel("No project open")
@@ -56,9 +59,15 @@ class MainWindow(QMainWindow):
         content.addLayout(actions)
         self.pages = QStackedWidget()
         for title in [self.sidebar.item(i).text() for i in range(self.sidebar.count())]:
-            page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel,'Export':self.export_panel}
+            page_map={'Images':self.images_panel,'Detections':self.detections_page,'Cameras':self.cameras_panel,'Settings':self.settings_panel,'Export':self.export_panel,'Species':self.species_panel}
             if title in page_map:
-                self.pages.addWidget(page_map[title])
+                if title=='Species':
+                    scroll=QScrollArea()
+                    scroll.setWidgetResizable(True)
+                    scroll.setWidget(page_map[title])
+                    self.pages.addWidget(scroll)
+                else:
+                    self.pages.addWidget(page_map[title])
                 continue
             if title == "Review Queue":
                 self.pages.addWidget(self.review_panel)
@@ -72,6 +81,7 @@ class MainWindow(QMainWindow):
                 processing.addTab(self.ocr_panel, "Overlay OCR")
                 processing.addTab(self.detection_panel, "Detection")
                 processing.addTab(self.reconcile_panel, "Reconcile")
+                processing.addTab(self.species_stage, 'Species identification')
                 self.pages.addWidget(processing)
                 continue
             if title == "Projects / Import":
@@ -105,6 +115,8 @@ class MainWindow(QMainWindow):
         self.ocr_panel.set_project(path)
         self.detection_panel.set_project(path)
         self.reconcile_panel.set_project(path)
+        self.species_stage.set_project(path)
+        self.species_panel.set_project(path)
         self.review_panel.set_project(path)
         self.export_panel.set_project(path)
         for panel in [self.images_panel,self.detections_page,self.cameras_panel,self.settings_panel]:
@@ -151,23 +163,24 @@ class MainWindow(QMainWindow):
             self.ocr_panel.request_pause()
             self.detection_panel.request_pause()
             self.reconcile_panel.request_pause()
+            self.species_stage.request_pause()
             self.statusBar().showMessage("Import is pausing. The window can close after the checkpoint completes.")
             event.ignore()
         else:
             event.accept()
 
     def processing_active(self):
-        return self.export_panel.active() or any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel])
+        return self.export_panel.active() or any(panel.active() for panel in [self.import_panel, self.exif_panel, self.ocr_panel, self.detection_panel, self.reconcile_panel,self.species_stage])
 
     def apply_settings(self):
         if self.project_path:
             settings=read_settings(self.project_path)
-            for panel,key in [(self.exif_panel,'exiftool_path'),(self.ocr_panel,'ocr_models'),(self.detection_panel,'detector_models')]:
+            for panel,key in [(self.exif_panel,'exiftool_path'),(self.ocr_panel,'ocr_models'),(self.detection_panel,'detector_models'),(self.species_stage,'species_models')]:
                 if not panel.active():
                     panel.executable.setText(settings[key])
 
     def refresh_page(self,index):
-        panels={0:self.dashboard,3:self.images_panel,4:self.cameras_panel,5:self.detections_page,6:self.review_panel}
+        panels={0:self.dashboard,3:self.images_panel,4:self.cameras_panel,5:self.detections_page,6:self.review_panel,9:self.species_panel}
         if index in panels:
             panels[index].refresh()
 

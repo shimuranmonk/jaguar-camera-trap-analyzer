@@ -39,6 +39,7 @@ def run_exif(database, executable, stop, messages):
 
 
 def run_processing(database, stage, model_root, stop, messages, scope=None):
+    engine = None
     def publish(value):
         try:
             messages.put_nowait(value)
@@ -59,6 +60,11 @@ def run_processing(database, stage, model_root, stop, messages, scope=None):
         elif stage == "reconcile":
             from jaguar.core.reconciliation import Reconciler
             engine = Reconciler(settings.get("timestamp_tolerance_seconds", 0), settings.get("temperature_tolerance_c", 1))
+        elif stage == 'species':
+            from jaguar.adapters.speciesnet import SpeciesEngine
+            from jaguar.core.settings import read_settings
+            defaults=read_settings(database)
+            engine=SpeciesEngine(defaults['species_python'],model_root,defaults['species_country'],defaults['species_admin1'])
         else:
             raise ValueError("Unsupported processing stage.")
         config = {"model_root": model_root, "settings": settings}
@@ -71,3 +77,6 @@ def run_processing(database, stage, model_root, stop, messages, scope=None):
             messages.put({"error": str(error)[:2000]}, timeout=2)
         except queue.Full:
             pass
+    finally:
+        if engine is not None and hasattr(engine,'close'):
+            engine.close()

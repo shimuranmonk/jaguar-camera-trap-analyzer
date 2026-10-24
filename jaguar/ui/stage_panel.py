@@ -13,9 +13,9 @@ class StagePanel(ExifPanel):
         self.stage = stage
         self.scope = None
         super().__init__()
-        self.layout().itemAt(0).widget().setText({"ocr": "Overlay OCR", "detect": "Animal / person / vehicle detection", "reconcile": "Metadata reconciliation and review rules"}[stage])
+        self.layout().itemAt(0).widget().setText({"ocr": "Overlay OCR", "detect": "Animal / person / vehicle detection", "reconcile": "Metadata reconciliation and review rules", 'species':'Species suggestions — human review required'}[stage])
         self.executable.clear()
-        self.executable.setPlaceholderText("Local OCR model folder containing det and rec" if stage == "ocr" else "Local MegaDetector model folder containing checkpoints")
+        self.executable.setPlaceholderText('Local SpeciesNet folder containing info.json' if stage=='species' else ("Local OCR model folder containing det and rec" if stage == "ocr" else "Local MegaDetector model folder containing checkpoints"))
         self.layout().itemAt(2).widget().setText("Locate local models")
         if stage == "reconcile":
             self.executable.hide()
